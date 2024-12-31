@@ -1,0 +1,116 @@
+#pragma once
+
+#ifdef GAMESERV_EXPORTS
+#define GAMESERV_API __declspec(dllexport)
+#else 
+#define GAMESERV_API __declspec(dllimport)
+#endif
+
+#include <random>
+
+constexpr float scr_width{ 400.0f };
+constexpr float scr_height{ 450.0f };
+
+constexpr char blue_ball{ 0b00000001 };
+constexpr char red_ball{ 0b00000010 };
+constexpr char green_ball{ 0b00000100 };
+constexpr char yellow_ball{ 0b00001000 };
+constexpr char purple_ball{ 0b00010000 };
+
+struct GAMESERV_API ONE_POINT
+{
+	float x{ 0 };
+	float y{ 0 };
+};
+
+struct GAMESERV_API DIMS
+{
+	 ONE_POINT up_left{ 0, 0 };
+	 ONE_POINT up_right{ 0, 0 };
+	 ONE_POINT down_left{ 0, 0 };
+	 ONE_POINT down_right{ 0, 0 };
+
+	 ONE_POINT center{ 0, 0 };
+
+	 float radius{ 0 };
+
+	 int row{ 0 };
+	 int col{ 0 };
+};
+
+namespace dll
+{
+	class GAMESERV_API RANDiT
+	{
+	private:
+		std::seed_seq* sq{ nullptr };
+		std::mt19937* twister{ nullptr };
+
+	public:
+
+		RANDiT();
+		~RANDiT();
+
+		int operator() (int min, int max);
+	};
+
+	class GAMESERV_API PROTON
+	{
+	protected:
+
+		DIMS myDims{};
+		float width{ 0 };
+		float height{ 0 };
+		PROTON* m_base_ptr{ nullptr };
+
+	public:
+
+		PROTON(float _sx = 0, float _sy = 0, float _width = 1.0f, float _height = 1.0f);
+		PROTON(float _sx, float _sy, float _width, float _height, PROTON* return_pointer);
+
+		virtual ~PROTON();
+
+		void SetEdges();
+		void NewDims(float new_width, float new_height);
+
+		void Move(float to_where_x, float to_where_y);
+		DIMS GetDims() const;
+
+		float GetWidth() const;
+		float GetHeight() const;
+
+		PROTON* GetHeapAdress() const;
+
+		void SetWidth(float new_width);
+		void SetHeight(float new_height);
+	};
+
+	class GAMESERV_API BALL :public PROTON
+	{
+		protected:
+			char my_type{ 0 };
+			
+			float slope{ 0 };
+			float intercept{ 0 };
+			
+			float move_ex{ 0 };
+			float move_ey{ 0 };
+			
+			float speed = 1.0f;
+
+			bool vert_line = false;
+			bool hor_line = false;
+			
+		public:
+			BALL(float sx, float sy, float where_x, float where_y, char what_type);
+
+			bool ShootBall(float gear);
+			void FallBall();
+			
+			char GetType()const;
+
+			void Release();
+			float Distance(POINT StartPoint, POINT RefPoint) const;
+	};
+
+}
