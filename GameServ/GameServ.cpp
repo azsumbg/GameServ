@@ -206,3 +206,58 @@ float dll::BALL::Distance(POINT StartPoint, POINT RefPoint) const
 
 	return sqrt(a + b);
 }
+
+/////////////////////////////////////////////
+
+//BALL CONTAINER ****************************
+
+dll::BALLCONTAINER::BALLCONTAINER(size_t lenght) :size{ lenght }, mBasePtr{ new NODE*[lenght] }{}
+dll::BALLCONTAINER::~BALLCONTAINER()
+{
+	if (mBasePtr)
+	{
+		for (int i = 0; i < size; i++) (*(mBasePtr + i))->mData.Release();
+		delete[]mBasePtr;
+	}
+}
+void dll::BALLCONTAINER::push_back(NODE* new_node)
+{
+	size++;
+	
+	NODE** temp_ptr{ new NODE* [size] };
+	
+	for (size_t i = 0; i < size - 1; ++i)*(temp_ptr + i) = *(mBasePtr + i);
+	
+	for (size_t i = 0; i < size - 1; ++i)(*(mBasePtr + i))->mData.Release();
+	
+	delete[]mBasePtr;
+
+	mBasePtr = temp_ptr;
+
+	*(mBasePtr + (size - 1)) = new_node;
+}
+void dll::BALLCONTAINER::push_at(NODE* new_node, size_t position)
+{
+	if (position < size)*(mBasePtr + position) = new_node;
+}
+void dll::BALLCONTAINER::remove(size_t index)
+{
+	if (index < size)
+	{
+		(*(mBasePtr + index))->mData.Release();
+		(*(mBasePtr + index))->mData = BALL();
+	}
+}
+dll::NODE* dll::BALLCONTAINER::operator [](size_t index)
+{
+	if (index < size)return *(mBasePtr + index);
+	return nullptr;
+}
+size_t dll::BALLCONTAINER::capacity() const
+{
+	return size;
+}
+bool dll::BALLCONTAINER::is_valid() const
+{
+	return size == 0;
+}

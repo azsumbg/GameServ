@@ -102,7 +102,7 @@ namespace dll
 			bool hor_line = false;
 			
 		public:
-			BALL(float sx, float sy, float where_x, float where_y, char what_type);
+			BALL(float sx = 0, float sy = 0, float where_x = 1.0f, float where_y = 1.0f, char what_type = 0);
 
 			bool ShootBall(float gear);
 			void FallBall();
@@ -111,6 +111,40 @@ namespace dll
 
 			void Release();
 			float Distance(POINT StartPoint, POINT RefPoint) const;
+	};
+
+	struct GAMESERV_API NODE
+	{
+		BALL* m_base_ptr{ nullptr };
+		BALL* m_left_ptr{ nullptr };
+		BALL* m_right_ptr{ nullptr };
+		BALL* m_up_ptr{ nullptr };
+		BALL* m_down_ptr{ nullptr };
+
+		BALL mData{};
+	};
+
+	class GAMESERV_API BALLCONTAINER
+	{
+	private:
+		NODE** mBasePtr{ nullptr };
+
+		size_t size = 0;
+
+	public:
+
+		BALLCONTAINER(size_t lenght);
+		
+		~BALLCONTAINER();
+
+		void push_back(NODE* new_node);
+		void push_at(NODE* new_node, size_t position);
+		void remove(size_t index);
+
+		size_t capacity() const;
+		bool is_valid() const;
+
+		NODE* operator [](size_t index);
 	};
 
 }
