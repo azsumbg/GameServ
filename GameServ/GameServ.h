@@ -11,6 +11,7 @@
 constexpr float scr_width{ 400.0f };
 constexpr float scr_height{ 450.0f };
 
+constexpr char no_ball{ 0 };
 constexpr char blue_ball{ 0b00000001 };
 constexpr char red_ball{ 0b00000010 };
 constexpr char green_ball{ 0b00000100 };
@@ -115,11 +116,11 @@ namespace dll
 
 	struct GAMESERV_API NODE
 	{
-		BALL* m_base_ptr{ nullptr };
-		BALL* m_left_ptr{ nullptr };
-		BALL* m_right_ptr{ nullptr };
-		BALL* m_up_ptr{ nullptr };
-		BALL* m_down_ptr{ nullptr };
+		NODE* m_base_ptr{ nullptr };
+		NODE* m_left_ptr{ nullptr };
+		NODE* m_right_ptr{ nullptr };
+		NODE* m_up_ptr{ nullptr };
+		NODE* m_down_ptr{ nullptr };
 
 		BALL mData{};
 	};
@@ -143,6 +144,8 @@ namespace dll
 
 		size_t capacity() const;
 		bool is_valid() const;
+
+		void SetLinks();
 
 		NODE* operator [](size_t index);
 	};

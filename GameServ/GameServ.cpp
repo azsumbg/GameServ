@@ -235,17 +235,40 @@ void dll::BALLCONTAINER::push_back(NODE* new_node)
 	mBasePtr = temp_ptr;
 
 	*(mBasePtr + (size - 1)) = new_node;
+
+	SetLinks();
 }
 void dll::BALLCONTAINER::push_at(NODE* new_node, size_t position)
 {
-	if (position < size)*(mBasePtr + position) = new_node;
+	if (position < size)
+	{
+		*(mBasePtr + position) = new_node;
+		SetLinks();
+	}
 }
 void dll::BALLCONTAINER::remove(size_t index)
 {
 	if (index < size)
 	{
-		(*(mBasePtr + index))->mData.Release();
-		(*(mBasePtr + index))->mData = BALL();
+		NODE** temp_ptr{ new NODE* [size - 1] };
+
+		size_t next_index = 0;
+
+		for (size_t i = 0; i < size; ++i)
+			if (i != index)
+			{
+				*(temp_ptr + next_index) = *(mBasePtr + i);
+				next_index++;
+			}
+			else ++next_index;
+
+		for (size_t i = 0; i < size; ++i)(*(mBasePtr + i))->mData.Release();
+
+		delete[]mBasePtr;
+
+		mBasePtr = temp_ptr;
+		
+		SetLinks();
 	}
 }
 dll::NODE* dll::BALLCONTAINER::operator [](size_t index)
@@ -260,4 +283,31 @@ size_t dll::BALLCONTAINER::capacity() const
 bool dll::BALLCONTAINER::is_valid() const
 {
 	return size == 0;
+}
+void dll::BALLCONTAINER::SetLinks()
+{
+	for (size_t check_node = 0; check_node < size; ++check_node)
+	{
+		for (size_t nodes = 0; nodes < size; ++nodes)
+		{
+			if (check_node != nodes)
+			{
+				DIMS CheckNodePoint = (*(mBasePtr + check_node))->mData.GetDims();
+				DIMS NodesPoint = (*(mBasePtr + nodes))->mData.GetDims();
+
+				POINT first_point{ (LONG)(CheckNodePoint.center.x),(LONG)(CheckNodePoint.center.y) };
+				POINT second_point{ (LONG)(NodesPoint.center.x),(LONG)(NodesPoint.center.y) };
+				
+				float dist = (*(mBasePtr + check_node))->mData.Distance(first_point, second_point);
+				if (dist <= 60.0f)
+				{
+					if (first_point.y < second_point.y)(*(mBasePtr + check_node))->m_down_ptr = *(mBasePtr + nodes);
+					else if (first_point.y > second_point.y)(*(mBasePtr + check_node))->m_up_ptr = *(mBasePtr + nodes);
+
+					if (first_point.x < second_point.x)(*(mBasePtr + check_node))->m_right_ptr = *(mBasePtr + nodes);
+					else if (first_point.x > second_point.x)(*(mBasePtr + check_node))->m_left_ptr = *(mBasePtr + nodes);
+				}
+			}
+		}
+	}
 }
