@@ -45,8 +45,8 @@ dll::PROTON::PROTON(float _sx, float _sy, float _width, float _height)
 	myDims.down_right.x = _sx + width;
 	myDims.down_right.y = _sy + height;
 
-	myDims.center.x = (_sx + width) / 2;
-	myDims.center.y = (_sy + height) / 2;
+	myDims.center.x = _sx + width / 2;
+	myDims.center.y = _sy + height / 2;
 
 	myDims.radius = width / 2;
 
@@ -77,8 +77,8 @@ void dll::PROTON::SetEdges()
 	myDims.down_right.x = myDims.up_left.x + width;
 	myDims.down_right.y = myDims.up_left.y + height;
 
-	myDims.center.x = (myDims.up_left.x + width) / 2;
-	myDims.center.y = (myDims.up_left.y + height) / 2;
+	myDims.center.x = myDims.up_left.x + width / 2;
+	myDims.center.y = myDims.up_left.y + height / 2;
 
 	myDims.col = static_cast<int>(myDims.down_left.x / 30.0f);
 	myDims.row = static_cast<int>(myDims.down_left.y / 30.0f);
@@ -211,30 +211,40 @@ float dll::BALL::Distance(POINT StartPoint, POINT RefPoint) const
 
 //BALL CONTAINER ****************************
 
-dll::BALLCONTAINER::BALLCONTAINER(size_t lenght) :size{ lenght }, mBasePtr{ new NODE*[lenght] }{}
+dll::BALLCONTAINER::BALLCONTAINER(size_t lenght) :size{ lenght }, mBasePtr{ new NODE* [lenght] }
+{
+	for (size_t i = 0; i < size; ++i)(*(mBasePtr + i)) = nullptr;
+}
 dll::BALLCONTAINER::~BALLCONTAINER()
 {
 	if (mBasePtr)
 	{
-		for (int i = 0; i < size; i++) (*(mBasePtr + i))->mData.Release();
 		delete[]mBasePtr;
 	}
 }
 void dll::BALLCONTAINER::push_back(NODE* new_node)
 {
-	size++;
-	
-	NODE** temp_ptr{ new NODE* [size] };
-	
-	for (size_t i = 0; i < size - 1; ++i)*(temp_ptr + i) = *(mBasePtr + i);
-	
-	for (size_t i = 0; i < size - 1; ++i)(*(mBasePtr + i))->mData.Release();
-	
-	delete[]mBasePtr;
+	if (current_position + 1 <= size)
+	{
+		(*(mBasePtr + current_position)) = new_node;
+		++current_position;
+	}
+	else
+	{
+		++size;
 
-	mBasePtr = temp_ptr;
+		NODE** temp_ptr{ new NODE * [size] };
 
-	*(mBasePtr + (size - 1)) = new_node;
+		for (size_t i = 0; i < size - 1; ++i) (*(temp_ptr + i)) = (*(mBasePtr + i));
+
+		delete[]mBasePtr;
+
+		mBasePtr = temp_ptr;
+
+		*(mBasePtr + (size - 1)) = new_node;
+		
+		++current_position;
+	}
 
 	SetLinks();
 }
@@ -251,7 +261,7 @@ void dll::BALLCONTAINER::remove(size_t index)
 	if (index < size)
 	{
 		NODE** temp_ptr{ new NODE* [size - 1] };
-
+		
 		size_t next_index = 0;
 
 		for (size_t i = 0; i < size; ++i)
@@ -260,14 +270,14 @@ void dll::BALLCONTAINER::remove(size_t index)
 				*(temp_ptr + next_index) = *(mBasePtr + i);
 				next_index++;
 			}
-			else ++next_index;
-
-		for (size_t i = 0; i < size; ++i)(*(mBasePtr + i))->mData.Release();
-
+			
 		delete[]mBasePtr;
 
 		mBasePtr = temp_ptr;
 		
+		--current_position;
+		--size;
+
 		SetLinks();
 	}
 }
@@ -290,22 +300,25 @@ void dll::BALLCONTAINER::SetLinks()
 	{
 		for (size_t nodes = 0; nodes < size; ++nodes)
 		{
-			if (check_node != nodes)
+			if ((*(mBasePtr + check_node)) && (*(mBasePtr + nodes)))
 			{
-				DIMS CheckNodePoint = (*(mBasePtr + check_node))->mData.GetDims();
-				DIMS NodesPoint = (*(mBasePtr + nodes))->mData.GetDims();
-
-				POINT first_point{ (LONG)(CheckNodePoint.center.x),(LONG)(CheckNodePoint.center.y) };
-				POINT second_point{ (LONG)(NodesPoint.center.x),(LONG)(NodesPoint.center.y) };
-				
-				float dist = (*(mBasePtr + check_node))->mData.Distance(first_point, second_point);
-				if (dist <= 60.0f)
+				if (check_node != nodes)
 				{
-					if (first_point.y < second_point.y)(*(mBasePtr + check_node))->m_down_ptr = *(mBasePtr + nodes);
-					else if (first_point.y > second_point.y)(*(mBasePtr + check_node))->m_up_ptr = *(mBasePtr + nodes);
+					DIMS CheckNodePoint = (*(mBasePtr + check_node))->mData.GetDims();
+					DIMS NodesPoint = (*(mBasePtr + nodes))->mData.GetDims();
 
-					if (first_point.x < second_point.x)(*(mBasePtr + check_node))->m_right_ptr = *(mBasePtr + nodes);
-					else if (first_point.x > second_point.x)(*(mBasePtr + check_node))->m_left_ptr = *(mBasePtr + nodes);
+					POINT first_point{ (LONG)(CheckNodePoint.center.x),(LONG)(CheckNodePoint.center.y) };
+					POINT second_point{ (LONG)(NodesPoint.center.x),(LONG)(NodesPoint.center.y) };
+
+					float dist = (*(mBasePtr + check_node))->mData.Distance(first_point, second_point);
+					if (dist <= 60.0f)
+					{
+						if (first_point.y < second_point.y)(*(mBasePtr + check_node))->m_down_ptr = *(mBasePtr + nodes);
+						else if (first_point.y > second_point.y)(*(mBasePtr + check_node))->m_up_ptr = *(mBasePtr + nodes);
+
+						if (first_point.x < second_point.x)(*(mBasePtr + check_node))->m_right_ptr = *(mBasePtr + nodes);
+						else if (first_point.x > second_point.x)(*(mBasePtr + check_node))->m_left_ptr = *(mBasePtr + nodes);
+					}
 				}
 			}
 		}

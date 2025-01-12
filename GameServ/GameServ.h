@@ -131,6 +131,7 @@ namespace dll
 		NODE** mBasePtr{ nullptr };
 
 		size_t size = 0;
+		int current_position = 0;
 
 	public:
 
